@@ -1,3 +1,30 @@
+mod first;
+mod second;
+mod model;
+
+
+use first::say_hello;
+use second::say_hello as say_hello_second;
+#[test]
+fn test_use() {
+    say_hello();
+    say_hello_second()
+}
+
+#[test]
+fn test_module() {
+    let user: model::User = model::User{
+        first_name: String::from("Eko"),
+        last_name: String::from("Khannedy"),
+        username: String::from("Khannedy"),
+        email: String::from("khunsan@example.com"),
+        age: 20,
+    };
+
+    user.say_hello("Pares");
+}
+
+
 fn main() {
     println!("Hello, world!");
 
@@ -456,10 +483,10 @@ fn range_inclusive() {
 }
 
 
-#[test]
-fn say_hello() {
-    println!("Hello")
-}
+// #[test]
+// fn say_hello() {
+//     println!("Hello")
+// }
 
 #[test]
 fn test_say_hello() {
@@ -632,6 +659,12 @@ struct Person {
     age: u8,
 }
 
+impl Person {
+    fn say_hello(self, name: &str) {
+        println!("Hello {}, my name is {}", name, self.first_name);
+    }
+}
+
 fn print_person(person: &Person) {
     println!("{}", person.first_name);
     println!("{}", person.middle_name);
@@ -664,6 +697,19 @@ fn test_struct_person() {
 
 struct GeoPoint (f64, f64);
 
+impl GeoPoint {
+    fn new(long: f64, lat: f64) -> GeoPoint {
+        GeoPoint(long, lat)
+    }
+}
+
+#[test]
+fn test_associated_function() {
+    let geo_point: GeoPoint = GeoPoint::new(60.0, 20.0);
+    println!("{}",geo_point.0);
+    println!("{}",geo_point.1);
+}
+
 #[test]
 fn tuple_struct() {
     let geo_point = GeoPoint(-6.57843, 10.57842);
@@ -679,3 +725,221 @@ fn test_nothing() {
     let _nothing2: Nothing = Nothing{};
 }
 
+#[test]
+fn test_method() {
+    let person: Person = Person{
+        age: 20,
+        first_name: String::from("Pares"),
+        middle_name: String::from("Khannedy"),
+        last_name: String::from("Sensei"),
+    };
+
+    person.say_hello("Budi")
+}
+
+enum Level {
+    Regular,
+    Premium,
+    Platinum,
+}
+
+#[test]
+fn test_level() {
+    let level: Level = Level::Premium;
+
+    match level {
+        Level::Regular => {
+            println!("Regular");
+        }
+        Level::Premium => {
+            println!("Premium");
+        }
+        Level::Platinum => {
+            println!("Platinum");
+        }
+    }
+}
+
+enum Payment{
+    CreditCard(String),
+    BankTransfer(String, String),
+    EWallet(String, String),
+}
+
+impl Payment{
+    fn pay(&self, amount: u32){
+        match self {
+            Payment::CreditCard(number) => {
+                println!("Paying with credit card {} amount {}", number, amount);
+            }
+            Payment::BankTransfer(bank, number) => {
+                println!("Paying with bank transfer {} {} amount {}", bank, number, amount);
+            }
+            Payment::EWallet(wallet, number) => {
+                println!("Paying with EWALlet {} {} amount {}", wallet, number, amount);
+            }
+        }
+    }
+}
+
+#[test]
+fn test_payment() {
+    let _payment1: Payment = Payment::CreditCard(String::from("423423423"));
+    _payment1.pay(1000000);
+
+    let _payment2: Payment = Payment::BankTransfer(String::from("BCA"), String::from("324324324"));
+    _payment2.pay(2000000);
+
+    let _payment3: Payment = Payment::EWallet(String::from("Gopay"), String::from("324324324"));
+    _payment3.pay(7600000);
+}
+
+#[test]
+fn test_match_value() {
+    let name = "Budi";
+
+    match name {
+        "Eko" => {
+            println!("Hello Eko");
+        }
+        "Budi" => {
+            println!("Hello Budi");
+        }
+        other => {
+            println!("Hello {}", other);
+        }
+    }
+
+    match name {
+        "Eko" | "Budi" | "Joko" => {
+            println!("Hello Bos");
+        }
+        other => {
+            println!("Hello {}", other);
+        }
+    }
+}
+
+#[test]
+fn tes_range_pattern() {
+    let value = 1900;
+    match value {
+        75..=100 => {
+            println!("Great")
+        }
+        50..=74 => {
+            println!("Good")
+        }
+        25..=49 => {
+            println!("Not Bad")
+        }
+        0..=24 => {
+            println!("Bad")
+        }
+        other => {
+            println!("You Are Out of Order {}", other);
+        }
+    }
+}
+
+#[test]
+fn test_struct_pattern() {
+    let point = GeoPoint::new(0.0, 20.0);
+
+    match point {
+        GeoPoint(long, 0.0) => {
+            println!("Long: {}", long);
+        }
+        GeoPoint( 0.0, lat) => {
+            println!("lat: {}", lat);
+        }
+        GeoPoint(long, lat) => {
+            println!("long: {}, lat: {}", long, lat);
+        }
+    }
+    
+    let person = Person{
+        first_name: String::from("eko"),
+        middle_name: String::from("kurniawan"),
+        last_name: String::from("khunnedy"),
+        age: 20,
+    };
+    
+    match person {
+        Person { first_name, last_name, ..} => {
+            println!("first_name: {}, last_name: {}", first_name, last_name);
+        }
+    }
+}
+
+#[test]
+fn test_ignoring() {
+    let point = GeoPoint::new(0.0, 20.0);
+
+    match point {
+        GeoPoint(long,_) => {
+            println!("Long: {}", long);
+        }
+    }
+}
+
+#[test]
+fn tes_ignoring_range() {
+    let value = 1900;
+    match value {
+        75..=100 => {
+            println!("Great")
+        }
+        50..=74 => {
+            println!("Good")
+        }
+        25..=49 => {
+            println!("Not Bad")
+        }
+        0..=24 => {
+            println!("Bad")
+        }
+        _ => {
+            println!("You Are Out of Order");
+        }
+    }
+}
+
+#[test]
+fn test_match_expression() {
+    let value = 2;
+
+    let result = match value {
+        0 => "nol",
+        1 => {
+            "satu"
+        },
+        2 => {
+            "dua"
+        },
+        _ => "Invalid"
+    };
+
+    println!("result: {}", result);
+}
+
+type Age = u8;
+type IdentityNumber = String;
+
+
+struct Customer{
+    id: IdentityNumber,
+    name: String,
+    age: Age,
+}
+
+#[test]
+fn test_identity_number() {
+    let customer = Customer{
+        id: String::from("8676454787"),
+        name: String::from("EKo"),
+        age: 20,
+    };
+
+    println!("{} {} {}", customer.id, customer.name, customer.age);
+}
