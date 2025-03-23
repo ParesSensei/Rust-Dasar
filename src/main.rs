@@ -1,14 +1,16 @@
 mod first;
 mod second;
+mod third;
 mod model;
 
-
-use first::say_hello;
+// use std::ops::Add;
+use crate::first::say_hello;
 use second::say_hello as say_hello_second;
 #[test]
 fn test_use() {
     say_hello();
-    say_hello_second()
+    say_hello_second();
+    crate::first::second::third::say_hello();
 }
 
 #[test]
@@ -942,4 +944,439 @@ fn test_identity_number() {
     };
 
     println!("{} {} {}", customer.id, customer.name, customer.age);
+}
+
+trait CanSayHello {
+    fn hello(&self) -> String {
+        String::from("Hello")
+    }
+    fn say_hello(&self) -> String;
+    fn say_hello_to(&self, name: &str) -> String;
+}
+
+trait CanSayGoodBye {
+    fn good_bye(&self) -> String;
+    fn good_bye_to(&self, name: &str) -> String;
+}
+
+impl CanSayHello for Person {
+    fn say_hello(&self) -> String {
+        format!("Hello, my name is {}", self.first_name)
+    }
+    fn say_hello_to(&self, name: &str) -> String {
+        format!("Hello, {}, my name is {}", name, self.first_name)
+    }
+}
+
+impl CanSayGoodBye for Person {
+    fn good_bye(&self) -> String {
+        format!("Goodbye, my name is {}", self.first_name)
+    }
+    fn good_bye_to(&self, name: &str) -> String {
+        format!("Goodbye, {}, my name is {}", name, self.first_name)
+    }
+}
+
+fn say_hello_trait(value: &impl CanSayHello) {
+    println!("{}", value.say_hello());
+}
+
+fn hello_and_goodbye(value: &(impl CanSayHello + CanSayGoodBye)) {
+    println!("{}", value.hello());
+    println!("{}", value.good_bye());
+}
+
+#[test]
+fn test_trait() {
+    let person = Person{
+        first_name: String::from("eko"),
+        middle_name: String::from("khunedy"),
+        last_name: String::from("khun san"),
+        age: 20,
+    };
+
+    say_hello_trait(&person);
+    hello_and_goodbye(&person);
+
+    let result = person.say_hello_to("amira");
+    println!("{}", result);
+
+    let result = person.hello();
+    println!("{}", result);
+
+    println!("{}", person.good_bye());
+    println!("{}", person.good_bye_to("Budi"));
+}
+
+struct SimplePerson {
+    name: String,
+}
+
+impl CanSayGoodBye for SimplePerson {
+    fn good_bye(&self) -> String {
+        format!("Goodbye, my name is {}", self.name)
+    }
+    fn good_bye_to(&self, name: &str) -> String {
+        format!("Goodbye, {}, my name is {}", name, self.name)
+    }
+}
+
+fn create_person(name: String) -> SimplePerson {
+    SimplePerson {name}
+}
+
+#[test]
+fn test_return_trait() {
+    let person =  create_person(String::from("eko"));
+    println!("{}", person.good_bye());
+    println!("{}", person.good_bye_to("Budi"));
+}
+
+struct Point<T> {
+    x: T,
+    y: T,
+}
+
+impl<T> Point<T> {
+
+    fn get_x(&self) -> &T {
+        &self.x
+    }
+
+    fn get_y(&self) -> &T {
+        &self.y
+    }
+}
+
+#[test]
+fn test_generic_struck() {
+    let integer:Point<i32> = Point::<i32>{
+        x: 1, y: 2,
+    };
+    let float:Point<f64> = Point::<f64> {
+        x: 1.0, y: 2.0,
+    };
+    println!("{} {}", integer.x, integer.y);
+    println!("{} {}", float.x, float.y);
+}
+
+enum Value<T> {
+    NONE,
+    VALUE(T),
+}
+
+#[test]
+fn test_generic_enum() {
+    let value = Value::<i32>::VALUE(10);
+
+    match value {
+        Value::NONE => {
+            println!("NONE");
+        }
+        Value::VALUE(value) => {
+            println!("Value {}", value);
+        }
+    }
+}
+
+struct Hi<T: CanSayGoodBye> {
+    value: T,
+}
+
+#[test]
+fn test_generic_bound() {
+    let hi = Hi::<SimplePerson>{
+        value: SimplePerson {
+            name: String::from("eko"),
+        }
+    };
+    println!("{}", hi.value.name);
+}
+
+fn min<T: PartialOrd>(value1: T, value2: T) -> T {
+    if value1 < value2 {
+        return value1;
+    } else {
+        return value2;
+    }
+}
+
+#[test]
+fn generic_in_function() {
+    let result = min::<i32>(10, 20);
+    println!("{}", result);
+
+    let result = min(10.6, 5.9);
+    println!("{}", result);
+}
+
+#[test]
+fn test_generic_method() {
+    let point = Point::<i32>{x: 10, y: 20};
+    println!("{}", point.get_x());
+    println!("{}", point.get_y());
+    println!("{}", point.get_value());
+}
+
+trait GetValue<T> where T: PartialOrd {
+    fn get_value(&self) -> &T;
+}
+
+impl<T> GetValue<T> for Point<T>  where T: PartialOrd {
+    fn get_value(&self) -> &T {
+        &self.x
+    }
+}
+
+use::core::ops::Add;
+use std::cmp::Ordering;
+use std::collections::{BTreeMap, HashMap, LinkedList, VecDeque};
+
+struct Apple {
+    quantity: i32,
+}
+
+impl Add for Apple {
+    type Output = Apple;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Apple {
+            quantity: self.quantity + rhs.quantity,
+        }
+    }
+}
+
+#[test]
+fn test_operator_add() {
+    let apple1 = Apple{quantity: 10};
+    let apple2 = Apple{quantity: 10};
+
+    let apple3 = apple1 + apple2;
+    println!("{}", apple3.quantity);
+}
+
+fn double(value: Option<i32>) -> Option<i32> {
+    match value {
+        None => None,
+        Some(i) => Some(i * 2)
+    }
+}
+
+#[test]
+fn test_option() {
+    let result = double(Some(10));
+    println!("{:?}", result);
+
+    let result = double(None);
+    println!("{:?}", result);
+}
+
+impl PartialEq for Apple {
+    fn eq(&self, other: &Self) -> bool {
+        self.quantity == other.quantity
+    }
+}
+
+impl PartialOrd for Apple {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.quantity.partial_cmp(&other.quantity)
+    }
+}
+
+#[test]
+fn test_comparing() {
+    let apple1 = Apple{quantity: 10};
+    let apple2 = Apple{quantity: 20};
+
+    println!("Apple1 == Apple2: {}", apple1 == apple2);
+    println!("Apple1 < Apple2: {}", apple1 < apple2);
+    println!("Apple1 > Apple2: {}", apple1 > apple2);
+}
+
+#[test]
+fn string_manipulation() {
+    let s = String::from("Eko Kurniawan Khannedy");
+
+    println!("{}", s.to_uppercase());
+    println!("{}", s.to_lowercase());
+    println!("{}", s.len());
+    println!("{}", s.replace("Eko", "Pares"));
+    println!("{}", s.contains("Kurniawan"));
+    println!("{}", s.starts_with("Eko"));
+    println!("{}", s.ends_with("Khannedy"));
+    println!("{}", s.trim());
+    println!("{}", &s[0..3]);
+    println!("{:?}", s.get(0..3));
+}
+
+struct Category{
+    id: String,
+    name: String,
+}
+
+use std::fmt::{Debug};
+
+impl Debug for Category {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Category")
+        .field("id", &self.id)
+        .field("name", &self.name)
+        .finish()
+    }
+}
+
+#[test]
+fn test_formet() {
+    let category = Category{
+        name: String::from("Gadget"),
+        id: String::from("GADGET"),
+    };
+
+    println!("{:?}", category);
+}
+
+#[test]
+fn test_closure() {
+    let sum: fn(i32, i32) -> i32 = |value1: i32, value2: i32| -> i32 {
+        value1 + value2
+    };
+
+    let result = sum(10, 20);
+    println!("{}", result);
+}
+
+fn print_with_filter(value: String, filter: fn(String) -> String) {
+    let result = filter(value);
+    println!("{}", result);
+}
+
+#[test]
+fn test_closure_as_parameter() {
+    let filter = |value: String| -> String {
+        value.to_uppercase()
+    };
+
+    print_with_filter(String::from("Eko"), filter);
+}
+
+fn to_uppercase(value: String) -> String {
+    value.to_uppercase()
+}
+
+#[test]
+fn test_function_as_closure() {
+    print_with_filter(String::from("Eko"), to_uppercase);
+}
+
+#[test]
+fn test_closure_scope() {
+    let mut counter = 0;
+
+    let mut increment = || {
+        counter += 1;
+        println!("Increment")
+    };
+
+    increment();
+    increment();
+    increment();
+
+    println!("Coounter {}", counter);
+}
+
+struct Counter {
+    coounter: i32
+}
+
+impl Counter {
+    fn increment(&mut self) {
+        self.coounter += 1;
+        println!("Increment");
+    }
+}
+
+#[test]
+fn test_counter() {
+    let mut counter = Counter{coounter: 0};
+    counter.increment();
+    counter.increment();
+    counter.increment();
+
+    println!("Counter {}", counter.coounter);
+}
+
+#[test]
+fn test_vector() {
+    let mut names: Vec<String> = Vec::<String>::new();
+    names.push(String::from("Eko"));
+    names.push(String::from("Pares"));
+    names.push(String::from("khannedy"));
+
+    for name in &names {
+        println!("{}", name);
+    }
+
+    println!("{:?}", names);
+}
+
+#[test]
+fn test_vector_deque() {
+    let mut names: VecDeque<String> = VecDeque::<String>::new();
+    names.push_back(String::from("Eko"));
+    names.push_back(String::from("Kurniawan"));
+    names.push_front(String::from("khannedy"));
+
+    for name in &names {
+        println!("{}", name);
+    }
+
+    println!("{}", names[1]);
+}
+
+#[test]
+fn test_linked_list() {
+    let mut names: LinkedList<String> = LinkedList::<String>::new();
+    names.push_back(String::from("Eko"));
+    names.push_back(String::from("Kurniawan"));
+    names.push_front(String::from("khannedy"));
+
+    for name in &names {
+        println!("{}", name);
+    }
+}
+
+#[test]
+fn test_hash_map() {
+    let mut map: HashMap<String, String> = HashMap::new();
+    map.insert(String::from("name"), String::from("eko"));
+    map.insert(String::from("age"), String::from("25"));
+    map.insert(String::from("Country"), String::from("Indonesia"));
+
+    let name = map.get("name");
+    let age = map.get("age");
+
+    println!("name: {}", name.unwrap());
+    println!("age: {}", age.unwrap());
+
+    for entry in &map {
+        println!("{} : {}", entry.0, entry.1);
+    }
+}
+
+#[test]
+fn test_btree_map() {
+    let mut map: BTreeMap<String, String> = BTreeMap::new();
+    map.insert(String::from("name"), String::from("eko"));
+    map.insert(String::from("age"), String::from("25"));
+    map.insert(String::from("Country"), String::from("Indonesia"));
+
+    let name = map.get("name");
+    let age = map.get("age");
+
+    println!("name: {}", name.unwrap());
+    println!("age: {}", age.unwrap());
+
+    for entry in &map {
+        println!("{} : {}", entry.0, entry.1);
+    }
 }
